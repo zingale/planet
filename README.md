@@ -8,6 +8,3 @@ Inputs to Castro are in inputs_2d files
 
 more editable parameters (velocities and vortices) in probin file.
 
-to run simulation after all parameters are specified:
-
-./Castro2d.Linux.g++.gfortran.MPI.ex inputs_2d
