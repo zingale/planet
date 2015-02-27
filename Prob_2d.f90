@@ -211,6 +211,32 @@ subroutine ca_initdata(level,time,lo,hi,nscal, &
 end subroutine ca_initdata
 
 
+subroutine ca_initrad(level,time,lo,hi,nrad, &
+                      rad_state,rad_state_l1,rad_state_l2, &
+                      rad_state_h1,rad_state_h2, &
+                      delta,xlo,xhi)
+
+  use probdata_module
+
+  integer level, nrad
+  integer lo(2), hi(2)
+  integer rad_state_l1,rad_state_l2
+  integer rad_state_h1,rad_state_h2
+  double precision ::  xlo(2), xhi(2), time, delta(2)
+  double precision :: rad_state(rad_state_l1:rad_state_h1, &
+                                rad_state_l2:rad_state_h2, nrad)
+
+  integer i,j
+
+  do j = lo(2), hi(2)
+     do i = lo(1), hi(1)
+        rad_state(i,j,:) = 0.d0
+     end do
+  end do
+  
+end subroutine ca_initrad
+
+
 ! ::: -----------------------------------------------------------
 
 subroutine ca_hypfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
@@ -566,3 +592,21 @@ subroutine ca_reactfill(react,react_l1,react_l2, &
   call filcc(react,react_l1,react_l2,react_h1,react_h2,domlo,domhi,delta,xlo,bc)
   
 end subroutine ca_reactfill
+
+
+subroutine ca_radfill(rad,rad_l1,rad_l2, &
+                        rad_h1,rad_h2,domlo,domhi,delta,xlo,time,bc)
+
+  use probdata_module
+  implicit none
+  include 'bc_types.fi'
+  
+  integer :: rad_l1,rad_l2,rad_h1,rad_h2
+  integer :: bc(2,2,*)
+  integer :: domlo(2), domhi(2)
+  double precision delta(2), xlo(2), time
+  double precision rad(rad_l1:rad_h1,rad_l2:rad_h2)
+  
+  call filcc(rad,rad_l1,rad_l2,rad_h1,rad_h2,domlo,domhi,delta,xlo,bc)
+  
+end subroutine ca_radfill
