@@ -19,9 +19,12 @@ EOS_dir     := gamma_law_general
 
 # This sets the network directory in $(NETWORK_HOME)
 Network_dir := general_null
-GENERAL_NET_INPUTS := ./planet.net
+Network_inputs := ./planet.net
+
+# power-law opacity
+Opacity_dir := null
 
 Bpack   := ./Make.package
 Blocs   := .
 
-include $(CASTRO_DIR)/Exec/Make.Castro
+include ../Make.Castro
