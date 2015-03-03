@@ -56,7 +56,7 @@ amr.check_int       = 1000       # number of timesteps between checkpoints
 
 # PLOTFILES
 amr.plot_file        = plt        # root name of plotfile
-amr.plot_int         = 100        # number of timesteps between plotfiles
+amr.plot_int         = 25        # number of timesteps between plotfiles
 amr.derive_plot_vars = ALL
 
 #PROBIN FILENAME
@@ -116,7 +116,7 @@ radiation.hi_bcflag = 0 0 0
 # 105 = LO_SANCHEZ_POMRANING   bcval is incident flux
 
 radiation.lo_bcval = 0.0 0.0 0.0
-radiation.hi_bcval = 0.0 -3.6e10  0.0
+radiation.hi_bcval = 0.0 3.6e9  0.0
 
 radiation.do_real_eos = 1
 
@@ -128,12 +128,12 @@ radiation.do_real_eos = 1
 # provides a floor for the temperature used in the power-law computation.
 
 # Planck mean opacity 
-radiation.const_kappa_p =  0.1
+radiation.const_kappa_p =  1.e-7
 radiation.kappa_p_exp_m =  0.0
 radiation.kappa_p_exp_n =  0.0
 
 # Rosseland mean opacity
-radiation.const_kappa_r =  0.1
+radiation.const_kappa_r =  1.e-7
 radiation.kappa_r_exp_m =  0.0
 radiation.kappa_r_exp_n =  0.0
 
