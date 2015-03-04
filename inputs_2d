@@ -47,7 +47,7 @@ amr.max_level       = 1       # maximum level number allowed
 amr.ref_ratio       = 2 2 2 2 # refinement ratio
 amr.regrid_int      = 2 2 2 2 # how often to regrid
 amr.blocking_factor = 4       # block factor in grid generation
-amr.max_grid_size   = 64 
+amr.max_grid_size   = 128 
 amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
 
 # CHECKPOINT FILES
@@ -128,14 +128,14 @@ radiation.do_real_eos = 1
 # provides a floor for the temperature used in the power-law computation.
 
 # Planck mean opacity 
-radiation.const_kappa_p =  1.e-7
-radiation.kappa_p_exp_m =  0.0
-radiation.kappa_p_exp_n =  0.0
+radiation.const_kappa_p =  6.35e-3
+radiation.kappa_p_exp_m =  2.0
+radiation.kappa_p_exp_n = -1.0
 
 # Rosseland mean opacity
-radiation.const_kappa_r =  1.e-7
-radiation.kappa_r_exp_m =  0.0
-radiation.kappa_r_exp_n =  0.0
+radiation.const_kappa_r =  6.35e-3
+radiation.kappa_r_exp_m =  2.0
+radiation.kappa_r_exp_n = -1.0
 
 # ------------------  INPUTS TO RADIATION SOLVER CLASS  -------------------
 
