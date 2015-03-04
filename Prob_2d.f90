@@ -102,6 +102,7 @@ subroutine ca_initdata(level,time,lo,hi,nscal, &
                        state,state_l1,state_l2,state_h1,state_h2, &
                        delta,xlo,xhi)
 
+  use bl_constants_module
   use probdata_module
   use interpolate_module
   use eos_module
@@ -120,8 +121,6 @@ subroutine ca_initdata(level,time,lo,hi,nscal, &
   double precision xdist,ydist,x,y,r,upert(2)
   integer i,j,n,vortex
 
-  double precision temppres(state_l1:state_h1,state_l2:state_h2)
-
   type (eos_t) :: eos_state
         
   do j = lo(2), hi(2)
@@ -138,11 +137,6 @@ subroutine ca_initdata(level,time,lo,hi,nscal, &
                                             model_state(:,ispec_model-1+n))
         enddo
         
-     enddo
-  enddo
-
-  do j = lo(2), hi(2)
-     do i = lo(1), hi(1)
         eos_state%rho = state(i,j,URHO)
         eos_state%T = state(i,j,UTEMP)
         eos_state%xn(:) = state(i,j,UFS:)
@@ -150,11 +144,11 @@ subroutine ca_initdata(level,time,lo,hi,nscal, &
         call eos(eos_input_rt, eos_state)
 
         state(i,j,UEINT) = eos_state%e
-        temppres(i,j) = eos_state%p
 
      end do
   end do
 
+  ! switch to conserved quantities
   do j = lo(2), hi(2)     
      do i = lo(1), hi(1)   
         
@@ -171,7 +165,7 @@ subroutine ca_initdata(level,time,lo,hi,nscal, &
   ! Initial velocities = 0
   state(:,:,UMX:UMY) = 0.d0
 
-  ! Now add the velocity perturbation
+  ! Now add the velocity perturbation (update the kinetic energy too)
   if (apply_vel_field) then
 
      do j = lo(2), hi(2)
@@ -202,6 +196,7 @@ subroutine ca_initdata(level,time,lo,hi,nscal, &
            state(i,j,UMX) = state(i,j,URHO) * upert(1)
            state(i,j,UMY) = state(i,j,URHO) * upert(2)
 
+           state(i,j,UEDEN) = state(i,j,UEDEN) + HALF*(state(i,j,UMX)**2 + state(i,j,UMY)**2)/state(i,j,URHO)
         end do
      end do
 
