@@ -1,0 +1,60 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+
+\usepackage{mathpazo}
+
+\newcommand{\gcc}{\mathrm{g~cm^{-3} }}
+\newcommand{\castro}{{\sffamily{Castro}}}
+
+\begin{document}
+
+\begin{center}
+  {\Large Notes on the Radiation-Driven Planet Convection Problem}
+\end{center}
+
+
+\section{\castro\ Solver Details}
+
+
+\section{Opacity}
+
+YM10 suggest the form of the opacity as (Eq.\ 3):
+\begin{equation}
+  \tilde{\kappa} = \tilde{\kappa}_0 \left (\frac{P}{P_\mathrm{kb}} \right)
+\end{equation}
+with $\tilde{\kappa} = 0.18~\mathrm{cm^2~g^{-1}}$, and $P_\mathrm{kb}
+= 1000~\mathrm{bar} = 10^9~\mathrm{erg~cm^{-3}}$.  Note that this form
+of opacity has different units than what \castro\ uses.  For \castro\,
+opacity has units of $\mathrm{cm^{-1}}$, so we have:
+\begin{equation}
+  \kappa = \rho \tilde{\kappa} = \tilde{\kappa}_0 \rho \left ( \frac{P}{P_\mathrm{kb}} \right )
+\end{equation}
+
+\castro\ takes the opacity as a simple power law of density and temperature (without any
+reference values for scaling).  We replace the pressure using the EOS:
+\begin{equation}
+  P = \frac{\rho k T}{\mu m_p}
+\end{equation}
+where $\mu = 2.34$ as specified in YM10, and $T$ is understood to be
+the gas temperature.  Substituting this in, we have:
+\begin{equation}
+  \kappa = \tilde{\kappa}_0 \rho^2 \frac{k T}{\mu m_p P_\mathrm{kb}}
+\end{equation}
+
+Since \castro\ wants $\kappa = \kappa_0 \rho^m T^{-n}$, we evaluate
+this with $\rho = 1~\gcc$ and $T = 1~\mathrm{K}$:
+\begin{equation}
+  \kappa = 6.35 \times 10^{-3} \, \rho^2 T~\mathrm{cm^{-1}}
+\end{equation}
+This can be set in \castro\ as:
+\begin{verbatim}
+radiation.const_kappa_p = 6.35e-3
+radiation.kappa_p.exp_m = 2
+radiation.kappa_p_exp_n = -1
+\end{verbatim}
+
+
+
+
+\end{document}
