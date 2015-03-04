@@ -272,6 +272,7 @@ subroutine ca_hypfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
                 domlo,domhi,delta,xlo,bc(1,1,n))
   enddo
 
+  
   do n = 1, NVAR
          
      !        XLO
@@ -292,16 +293,19 @@ subroutine ca_hypfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
      
      !        YLO
      if ( bc(2,1,n).eq.EXT_DIR .and. adv_l2.lt.domlo(2)) then
-        
+
         ! this do loop counts backwards since we want to work downward
         do j=domlo(2)-1,adv_l2,-1
            y = xlo(2) + delta(2)*(float(j-adv_l2) + 0.5d0)
+
+           ! zero-gradient catch-all -- this will get the radiation
+           ! energy
+           adv(adv_l1:adv_h1,j,:) = adv(adv_l1:adv_h1,j+1,:)
            
            do i=adv_l1,adv_h1
               
               ! set all the variables even though we're testing on URHO
               if (n .eq. URHO) then
-                 
                  
                  if (interp_BC) then
                     
@@ -423,6 +427,10 @@ subroutine ca_hypfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
         do j=domhi(2)+1,adv_h2
            y = xlo(2) + delta(2)*(float(j-adv_l2) + 0.5d0)
 
+           ! zero-gradient catch-all -- this will get the radiation
+           ! energy
+           adv(adv_l1:adv_h1,j,:) = adv(adv_l1:adv_h1,j-1,:)
+           
            do i=adv_l1,adv_h1
                   
               ! set all the variables even though we're testing on URHO
@@ -566,6 +574,7 @@ subroutine ca_gravyfill(grav,grav_l1,grav_l2,grav_h1,grav_h2, &
   double precision grav(grav_l1:grav_h1,grav_l2:grav_h2)
   
   call filcc(grav,grav_l1,grav_l2,grav_h1,grav_h2,domlo,domhi,delta,xlo,bc)
+
   
 end subroutine ca_gravyfill
 
@@ -601,7 +610,20 @@ subroutine ca_radfill(rad,rad_l1,rad_l2, &
   integer :: domlo(2), domhi(2)
   double precision delta(2), xlo(2), time
   double precision rad(rad_l1:rad_h1,rad_l2:rad_h2)
+
+  integer :: j
   
   call filcc(rad,rad_l1,rad_l2,rad_h1,rad_h2,domlo,domhi,delta,xlo,bc)
+
+  ! we are inflow at the lower boundary, so we need to take the appropriate
+  ! action for the radiation here (during the hydro step)
+  
+  ! this do loop counts backwards since we want to work downward
+  do j=domlo(2)-1,rad_l2,-1
+
+     ! zero-gradient catch-all -- this will get the radiation
+     ! energy
+     rad(rad_l1:rad_h1,j) = rad(rad_l1:rad_h1,j+1)
+  enddo             
   
 end subroutine ca_radfill
