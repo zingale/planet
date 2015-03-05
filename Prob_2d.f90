@@ -553,9 +553,21 @@ subroutine ca_gravxfill(grav,grav_l1,grav_l2,grav_h1,grav_h2, &
   integer :: domlo(2), domhi(2)
   double precision delta(2), xlo(2), time
   double precision grav(grav_l1:grav_h1,grav_l2:grav_h2)
+  integer :: i, j
   
   call filcc(grav,grav_l1,grav_l2,grav_h1,grav_h2,domlo,domhi,delta,xlo,bc)
-      
+
+  ! our lower boundary is inflow, so we need to make sure the
+  ! gravitational acceleration is set correctly there
+  !     YLO
+  if ( bc(2,1,1).eq.EXT_DIR .and. grav_l2.lt.domlo(2)) then
+     do j=grav_l2,domlo(2)-1
+        do i=grav_l1,grav_h1
+           grav(i,j) = 0.0
+        end do
+     end do
+  end if
+  
 end subroutine ca_gravxfill
 
 ! ::: -----------------------------------------------------------
@@ -564,6 +576,8 @@ subroutine ca_gravyfill(grav,grav_l1,grav_l2,grav_h1,grav_h2, &
                         domlo,domhi,delta,xlo,time,bc)
 
   use probdata_module
+  use meth_params_module, only: const_grav
+  
   implicit none
   include 'bc_types.fi'
   
@@ -572,9 +586,20 @@ subroutine ca_gravyfill(grav,grav_l1,grav_l2,grav_h1,grav_h2, &
   integer :: domlo(2), domhi(2)
   double precision delta(2), xlo(2), time
   double precision grav(grav_l1:grav_h1,grav_l2:grav_h2)
+  integer :: i, j
   
   call filcc(grav,grav_l1,grav_l2,grav_h1,grav_h2,domlo,domhi,delta,xlo,bc)
 
+  ! our lower boundary is inflow, so we need to make sure the
+  ! gravitational acceleration is set correctly there
+  !     YLO
+  if ( bc(2,1,1).eq.EXT_DIR .and. grav_l2.lt.domlo(2)) then
+     do j=grav_l2,domlo(2)-1
+        do i=grav_l1,grav_h1
+           grav(i,j) = const_grav
+        end do
+     end do
+  end if
   
 end subroutine ca_gravyfill
 
