@@ -340,7 +340,6 @@ subroutine ca_hypfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
                     call eos(eos_input_rt, eos_state)
                     
                     pres_above = eos_state%p
-                    eint = eos_state%e
 
                     converged_hse = .FALSE.
 
@@ -359,7 +358,6 @@ subroutine ca_hypfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
 
                        dpdr = eos_state%dpdr
                        pres_zone = eos_state%p
-                       eint = eos_state%e
 
                        ! Newton-Raphson - we want to zero A = p_want - p(rho)
                        A = p_want - pres_zone
