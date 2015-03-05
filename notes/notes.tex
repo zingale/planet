@@ -16,6 +16,14 @@
 
 \section{\castro\ Solver Details}
 
+We are using the gray radiation solver.  Weiqun suggests
+\begin{itemize}
+\item {\tt radiation.comoving = 1} ---should be more stable
+\item {\tt radsolve.level\_solver\_flag = 1} ---should be faster than {\tt 0}
+\item {\tt castro.cfl}: the value we were using by default is {\tt
+  0.9}---this may be too high.
+\end{itemize}
+
 
 \section{Opacity}
 
@@ -55,6 +63,29 @@ radiation.kappa_p_exp_n = -1
 \end{verbatim}
 
 
+\subsection{Boundary Conditions}
+
+The upper boundary of the domain needs to specify the flux coming from
+the parent star.  Weiqun suggested the Sanchez-Pomraning BC, which is
+a Neumann-like BC that allows for an incoming and outgoing flux.
+
+The form of the flux is $F = cE_r$, where $E_r$ is the radiation
+energy density.  This flux has units of $\mathrm{erg~cm^{-2}~s^{-1}}$.
+We evaluate it as
+\begin{equation}
+  F = cE_r = c a T_\star^4 = 4\sigma T_\star^4
+\end{equation}
+where $T_\star$ is the effective temperature of the stellar flux at
+the planet---this is how the YM10 paper characterizes the radiation
+flux.  Evaluating, we have:
+\begin{equation}
+  F = 3.6\times 10^9~\mathrm{erg~cm^{-2}~s^{-1}}
+\end{equation}
+
+For the lower boundary, there should be a flux coming from the
+interior of the planet, but this will be very small compared to the
+flux coming from the star.  For now, we use a standard homogeneous
+Neumann boundary condition.
 
 
 \end{document}
