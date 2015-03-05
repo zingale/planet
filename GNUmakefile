@@ -14,14 +14,15 @@ USE_GRAV         = TRUE
 USE_REACT        = FALSE
 USE_MODELPARSER  = TRUE
 
-CASTRO_DIR = ../..
-
 # This sets the EOS directory in $(CASTRO_DIR)/EOS
 EOS_dir     := gamma_law_general
 
 # This sets the network directory in $(NETWORK_HOME)
 Network_dir := general_null
-GENERAL_NET_INPUTS := ./planet.net
+Network_inputs := ./planet.net
+
+# power-law opacity
+Opacity_dir := null
 
 Bpack   := ./Make.package
 Blocs   := .
