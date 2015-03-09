@@ -255,17 +255,13 @@ subroutine ca_hypfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
   double precision delta(2), xlo(2), time
   double precision adv(adv_l1:adv_h1,adv_l2:adv_h2,NVAR)
   
-  integer i,j,q,n,iter,MAX_ITER
+  integer i,j,q,n
   double precision y
-  double precision pres_above,p_want,pres_zone, A
-  double precision drho,dpdr,temp_zone,eint,X_zone(nspec),dens_zone
-  double precision TOL
-  logical converged_hse
-
+  double precision pres_above,p_want,pres_zone
+  double precision temp_zone,X_zone(nspec),dens_zone
+  double precision :: y_base, dens_base, slope
+  
   type (eos_t) :: eos_state
-
-  MAX_ITER = 100
-  TOL = 1.d-8
 
   do n = 1,NVAR
      call filcc(adv(adv_l1,adv_l2,n),adv_l1,adv_l2,adv_h1,adv_h2, &
@@ -275,7 +271,7 @@ subroutine ca_hypfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
   
   do n = 1, NVAR
          
-     !        XLO
+     ! XLO
      if ( bc(1,1,n).eq.EXT_DIR .and. adv_l1.lt.domlo(1)) then
 
         ! we are periodic in x -- we should never get here
@@ -283,143 +279,95 @@ subroutine ca_hypfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
         
      end if
      
-     !        XHI
+     ! XHI
      if ( bc(1,2,n).eq.EXT_DIR .and. adv_h1.gt.domhi(1)) then
         
         ! we are periodic in x -- we should never get here
         call bl_error("ERROR: invalid BC in Prob_2d.f90")
         
      end if
-     
-     !        YLO
-     if ( bc(2,1,n).eq.EXT_DIR .and. adv_l2.lt.domlo(2)) then
+  enddo
+  
+  ! YLO -- HSE with linear density profile, T found via iteration
+  ! we do all variables at once here
+  if ( bc(2,1,1).eq.EXT_DIR .and. adv_l2.lt.domlo(2)) then
 
+     y_base = xlo(2) + delta(2)*(float(domlo(2)-adv_l2) + 0.5d0)
+        
+     do i=adv_l1,adv_h1
+
+        dens_base = adv(i,domlo(2),URHO)
+
+        ! density slope
+        slope = (adv(i,domlo(2)+1,URHO) - adv(i,domlo(2),URHO))/delta(2)
+           
         ! this do loop counts backwards since we want to work downward
         do j=domlo(2)-1,adv_l2,-1
            y = xlo(2) + delta(2)*(float(j-adv_l2) + 0.5d0)
-
+           
            ! zero-gradient catch-all -- this will get the radiation
            ! energy
-           adv(adv_l1:adv_h1,j,:) = adv(adv_l1:adv_h1,j+1,:)
+           adv(i,j,:) = adv(i,j+1,:)
+
+           ! HSE integration to get temperature, pressure
+                    
+           ! density is linear from the last two zones
+           dens_zone = dens_base + slope*(y - y_base)
+
+           ! temperature guess and species held constant in BCs
+           temp_zone = adv(i,j+1,UTEMP)
+           X_zone(:) = adv(i,j+1,UFS:UFS-1+nspec)/adv(i,j+1,URHO)
+                        
+           ! get pressure in zone above
+           eos_state%rho = adv(i,j+1,URHO)
+           eos_state%T = adv(i,j+1,UTEMP)
+           eos_state%xn(:) = adv(i,j+1,UFS:UFS-1+nspec)/adv(i,j+1,URHO)
+
+           call eos(eos_input_rt, eos_state)
+                    
+           pres_above = eos_state%p
+
+           ! pressure needed from HSE
+           p_want = pres_above - &
+                delta(2)*0.5d0*(dens_zone + adv(i,j+1,URHO))*const_grav
+
+           ! EOS with HSE pressure + linear density profile yields T, e, ...
+           eos_state%rho = dens_zone
+           eos_state%T = temp_zone   ! guess
+           eos_state%xn(:) = X_zone(:)
+           eos_state%p = p_want
            
-           do i=adv_l1,adv_h1
-              
-              ! set all the variables even though we're testing on URHO
-              if (n .eq. URHO) then
-                 
-                 if (interp_BC) then
-                    
-                    dens_zone = interpolate(y,npts_model,model_r, &
-                                            model_state(:,idens_model)) 
-                    
-                    temp_zone = interpolate(y,npts_model,model_r, &
-                                            model_state(:,itemp_model))
-                    
-                    do q = 1, nspec
-                       X_zone(q) = interpolate(y,npts_model,model_r, &
-                                               model_state(:,ispec_model-1+q))
-                    enddo
+           call eos(eos_input_rp, eos_state)
 
-                 else
-
-                    ! HSE integration to get density, pressure
+           ! velocity
+           if (zero_vels) then
                     
-                    ! initial guesses
-                    dens_zone = adv(i,j+1,URHO)
+              ! zero normal momentum causes pi waves to pass through
+              adv(i,j,UMY) = 0.d0
 
-                    ! temperature and species held constant in BCs
-                    temp_zone = adv(i,j+1,UTEMP)
-                    X_zone(:) = adv(i,j+1,UFS:UFS-1+nspec)/adv(i,j+1,URHO)
+              ! zero transverse momentum
+              adv(i,j,UMX) = 0.d0
+           else
                         
+              ! zero gradient velocity
+              adv(i,j,UMX) = dens_zone*(adv(i,domlo(2),UMX)/adv(i,domlo(2),URHO))
+              adv(i,j,UMY) = dens_zone*(adv(i,domlo(2),UMY)/adv(i,domlo(2),URHO))
+           endif
 
-                    ! get pressure in zone above
-                    eos_state%rho = adv(i,j+1,URHO)
-                    eos_state%T = adv(i,j+1,UTEMP)
-                    eos_state%xn(:) = adv(i,j+1,UFS:UFS-1+nspec)/adv(i,j+1,URHO)
+           adv(i,j,URHO) = dens_zone
+           adv(i,j,UEINT) = dens_zone*eos_state%e
+           adv(i,j,UEDEN) = dens_zone*eos_state%e + & 
+                0.5d0*(adv(i,j,UMX)**2+adv(i,j,UMY)**2)/dens_zone
+           adv(i,j,UTEMP) = eos_state%T
+           adv(i,j,UFS:UFS-1+nspec) = dens_zone*X_zone(:)
 
-                    call eos(eos_input_rt, eos_state)
-                    
-                    pres_above = eos_state%p
-
-                    converged_hse = .FALSE.
-
-                    do iter = 1, MAX_ITER
-
-                       ! pressure needed from HSE
-                       p_want = pres_above - &
-                            delta(2)*0.5d0*(dens_zone + adv(i,j+1,URHO))*const_grav
-
-                       ! pressure from EOS
-                       eos_state%rho = dens_zone
-                       eos_state%T = temp_zone
-                       eos_state%xn(:) = X_zone
-
-                       call eos(eos_input_rt, eos_state)
-
-                       dpdr = eos_state%dpdr
-                       pres_zone = eos_state%p
-
-                       ! Newton-Raphson - we want to zero A = p_want - p(rho)
-                       A = p_want - pres_zone
-                       drho = A/(dpdr + 0.5*delta(2)*const_grav)
-                           
-                       dens_zone = max(0.9_dp_t*dens_zone, &
-                                       min(dens_zone + drho, 1.1_dp_t*dens_zone))
-
-
-                       ! convergence?
-                       if (abs(drho) < TOL*dens_zone) then
-                          converged_hse = .TRUE.
-                          exit
-                       endif
-
-                    enddo
-                    
-                    if (.not. converged_hse) then
-                       call bl_error("ERROR: failure to converge in -Y BC")
-                    endif
-                    
-                 endif
-
-
-                 ! velocity
-                 if (zero_vels) then
-                    
-                    ! zero normal momentum causes pi waves to pass through
-                    adv(i,j,UMY) = 0.d0
-
-                    ! zero transverse momentum
-                    adv(i,j,UMX) = 0.d0
-                 else
-                        
-                    ! zero gradient velocity
-                    adv(i,j,UMX) = dens_zone*(adv(i,domlo(2),UMX)/adv(i,domlo(2),URHO))
-                    adv(i,j,UMY) = dens_zone*(adv(i,domlo(2),UMY)/adv(i,domlo(2),URHO))
-                 endif
-
-                 eos_state%rho = dens_zone
-                 eos_state%T = temp_zone
-                 eos_state%xn(:) = X_zone
-
-                 call eos(eos_input_rt, eos_state)
-
-                 pres_zone = eos_state%p
-                 eint = eos_state%e
-
-                 adv(i,j,URHO) = dens_zone
-                 adv(i,j,UEINT) = dens_zone*eint
-                 adv(i,j,UEDEN) = dens_zone*eint + & 
-                      0.5d0*(adv(i,j,UMX)**2+adv(i,j,UMY)**2)/dens_zone
-                 adv(i,j,UTEMP) = temp_zone
-                 adv(i,j,UFS:UFS-1+nspec) = dens_zone*X_zone(:)
-
-              end if
-
-           end do
         end do
-     end if
+     end do
+  end if
 
-     !        YHI
+  
+  ! YHI
+  do n = 1, nvar
      if ( bc(2,2,n).eq.EXT_DIR .and. adv_h2.gt.domhi(2)) then
 
         do j=domhi(2)+1,adv_h2
@@ -457,12 +405,9 @@ subroutine ca_hypfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
 
                  call eos(eos_input_rt, eos_state)
 
-                 eint = eos_state%e
-                 pres_zone = eos_state%p
-
                  adv(i,j,URHO) = dens_zone
-                 adv(i,j,UEINT) = dens_zone*eint
-                 adv(i,j,UEDEN) = dens_zone*eint + &
+                 adv(i,j,UEINT) = dens_zone*eos_state%e
+                 adv(i,j,UEDEN) = dens_zone*eos_state%e + &
                       0.5d0*(adv(i,j,UMX)**2+adv(i,j,UMY)**2)/dens_zone
                  adv(i,j,UTEMP) = temp_zone
                  adv(i,j,UFS:UFS-1+nspec) = dens_zone*X_zone(:)
@@ -483,10 +428,12 @@ subroutine ca_denfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
                       domlo,domhi,delta,xlo,time,bc)
 
   use probdata_module
+  use meth_params_module, only : NVAR, URHO, UMX, UMY, UEDEN, UEINT, &
+       UFS, UTEMP, const_grav
+  use bl_error_module
   use interpolate_module
   use model_parser_module
-  use bl_error_module
-
+  
   implicit none
   include 'bc_types.fi'
   integer adv_l1,adv_l2,adv_h1,adv_h2
@@ -495,8 +442,10 @@ subroutine ca_denfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
   double precision delta(2), xlo(2), time
   double precision adv(adv_l1:adv_h1,adv_l2:adv_h2)
 
-  integer i,j
+  integer i,j,q,n
   double precision y
+  double precision :: y_base, dens_base, slope
+  double precision TOL
       
   ! Note: this function should not be needed, technically, but is
   ! provided to filpatch because there are many times in the algorithm
@@ -519,10 +468,23 @@ subroutine ca_denfill(adv,adv_l1,adv_l2,adv_h1,adv_h2, &
 
   !     YLO
   if ( bc(2,1,1).eq.EXT_DIR .and. adv_l2.lt.domlo(2)) then
-     do j=adv_l2,domlo(2)-1
-        y = xlo(2) + delta(2)*(float(j-adv_l2) + 0.5d0)
-        do i=adv_l1,adv_h1
-           adv(i,j) = interpolate(y,npts_model,model_r,model_state(:,idens_model))
+
+     y_base = xlo(2) + delta(2)*(float(domlo(2)-adv_l2) + 0.5d0)
+        
+     do i=adv_l1,adv_h1
+
+        dens_base = adv(i,domlo(2))
+
+        ! density slope
+        slope = (adv(i,domlo(2)+1) - adv(i,domlo(2)))/delta(2)
+           
+        ! this do loop counts backwards since we want to work downward
+        do j=domlo(2)-1,adv_l2,-1
+           y = xlo(2) + delta(2)*(float(j-adv_l2) + 0.5d0)
+           
+           ! density is linear from the last two zones
+           adv(i,j) = dens_base + slope*(y - y_base)
+
         end do
      end do
   end if
