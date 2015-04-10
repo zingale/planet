@@ -10,7 +10,7 @@ module probdata_module
   double precision, save :: velpert_scale, velpert_amplitude, velpert_height_loc
   integer         , save :: num_vortices
 
-  double precision, save :: shear_height_loc
+  double precision, save :: shear_height_loc, shear_amplitude
   
   double precision, allocatable, save :: xloc_vortices(:)
 

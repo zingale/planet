@@ -16,7 +16,7 @@ subroutine PROBINIT (init,name,namlen,problo,probhi)
 
   namelist /fortin/ model_name, apply_vel_field, &
        velpert_scale, velpert_amplitude, velpert_height_loc, num_vortices, &
-       shear_height_loc, &
+       shear_height_loc, shear_amplitude, &
        cutoff_density, interp_BC, zero_vels
 
   integer, parameter :: maxlen = 256
@@ -177,7 +177,7 @@ subroutine ca_initdata(level,time,lo,hi,nscal, &
            x = xlo(1) + delta(1)*(float(i-lo(1)) + 0.5d0)
 
            if (y >= shear_height_loc) then 
-              state(:,:,UMX) = state(:,:,URHO)*50.d0
+              state(:,:,UMX) = state(:,:,URHO)*shear_amplitude
               state(:,:,UMY) = 0.d0
            endif
            
