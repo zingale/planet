@@ -16,7 +16,8 @@ subroutine PROBINIT (init,name,namlen,problo,probhi)
 
   namelist /fortin/ model_name, apply_vel_field, &
        velpert_scale, velpert_amplitude, velpert_height_loc, num_vortices, &
-       H_min, cutoff_density, interp_BC, zero_vels
+       shear_height_loc, &
+       cutoff_density, interp_BC, zero_vels
 
   integer, parameter :: maxlen = 256
   character probin*(maxlen)
@@ -38,11 +39,11 @@ subroutine PROBINIT (init,name,namlen,problo,probhi)
   velpert_amplitude = 1.0d2
   velpert_height_loc = 6.5d3
   num_vortices = 1
-  H_min = 1.d-4
   cutoff_density = 50.d0
   interp_BC = .false.
   zero_vels = .false.
-
+  shear_height_loc = 0.0d0
+  
   ! Read namelists
   untin = 9
   open(untin,file=probin(1:namlen),form='formatted',status='old')
@@ -162,9 +163,9 @@ subroutine ca_initdata(level,time,lo,hi,nscal, &
      enddo
   enddo
 
-  ! Initial velocities = 0
+  ! Initial velocities
   state(:,:,UMX:UMY) = 0.d0
-
+  
   ! Now add the velocity perturbation (update the kinetic energy too)
   if (apply_vel_field) then
 
@@ -175,6 +176,11 @@ subroutine ca_initdata(level,time,lo,hi,nscal, &
         do i = lo(1), hi(1)
            x = xlo(1) + delta(1)*(float(i-lo(1)) + 0.5d0)
 
+           if (y >= shear_height_loc) then 
+              state(:,:,UMX) = state(:,:,URHO)*50.d0
+              state(:,:,UMY) = 0.d0
+           endif
+           
            upert = 0.d0
 
            ! loop over each vortex
@@ -193,8 +199,8 @@ subroutine ca_initdata(level,time,lo,hi,nscal, &
                    * (-1.d0)**vortex
            enddo
 
-           state(i,j,UMX) = state(i,j,URHO) * upert(1)
-           state(i,j,UMY) = state(i,j,URHO) * upert(2)
+           state(i,j,UMX) = state(i,j,UMX) + state(i,j,URHO) * upert(1)
+           state(i,j,UMY) = state(i,j,UMY) + state(i,j,URHO) * upert(2)
 
            state(i,j,UEDEN) = state(i,j,UEDEN) + HALF*(state(i,j,UMX)**2 + state(i,j,UMY)**2)/state(i,j,URHO)
         end do

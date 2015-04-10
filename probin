@@ -3,13 +3,15 @@
  model_name =  "newmodelcpp.hse"
 
  apply_vel_field = T
- velpert_height_loc = 3e8
+ velpert_height_loc = 3.75e8
  velpert_scale = 1e7
- velpert_amplitude = 3e3
- num_vortices = 1
+ velpert_amplitude = 1.5e7
+ num_vortices = 0
 
- zero_vels = T
+ zero_vels = F
  interp_BC = F
+
+ shear_height_loc = 3.8e8
 
 /
 
