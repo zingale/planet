@@ -5,7 +5,8 @@ contains
 
   subroutine sponge(uout,uout_l1,uout_l2,&
                     uout_h1,uout_h2,lo,hi,t,dt, &
-                    dx,dy,domlo,domhi)
+                    dx,dy,domlo,domhi, &
+                    E_added,xmom_added,ymom_added) 
 
     use bl_constants_module, only : M_PI
     use meth_params_module , only : NVAR, URHO, UMX, UMY, UEDEN
@@ -21,6 +22,7 @@ contains
     double precision :: rho, ke_old, ke_new, fac
     double precision :: sponge_mult, sponge_center_density, sponge_start_factor, sponge_kappa
     double precision :: sponge_start_density
+    double precision :: E_added,xmom_added,ymom_added
     
     sponge_center_density = 2.d-7
     sponge_start_factor = 2.0d0
