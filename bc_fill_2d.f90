@@ -364,6 +364,7 @@ subroutine ca_radfill(rad,rad_l1,rad_l2, &
 
   integer :: j
   
+  if ( bc(2,1,1).eq.EXT_DIR .and. rad_l2.lt.domlo(2)) then
   call filcc(rad,rad_l1,rad_l2,rad_h1,rad_h2,domlo,domhi,delta,xlo,bc)
 
   ! we are inflow at the lower boundary, so we need to take the appropriate
