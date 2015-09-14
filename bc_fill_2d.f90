@@ -399,20 +399,21 @@ subroutine ca_radfill(rad,rad_l1,rad_l2, &
 
   integer :: j
   
-  if ( bc(2,1,1).eq.EXT_DIR .and. rad_l2.lt.domlo(2)) then
   call filcc(rad,rad_l1,rad_l2,rad_h1,rad_h2,domlo,domhi,delta,xlo,bc)
 
   ! we are inflow at the lower boundary, so we need to take the appropriate
   ! action for the radiation here (during the hydro step)
   
   ! this do loop counts backwards since we want to work downward
-  do j=domlo(2)-1,rad_l2,-1
+  if ( bc(2,1,1).eq.EXT_DIR .and. rad_l2.lt.domlo(2)) then
+     do j=domlo(2)-1,rad_l2,-1
 
      ! zero-gradient catch-all -- this will get the radiation
      ! energy
-     rad(rad_l1:rad_h1,j) = rad(rad_l1:rad_h1,j+1)
-  enddo             
-  
+        rad(rad_l1:rad_h1,j) = rad(rad_l1:rad_h1,j+1)
+     enddo
+  enddo
+
 end subroutine ca_radfill
 
 subroutine ca_phigravfill(phi,phi_l1,phi_l2, &
