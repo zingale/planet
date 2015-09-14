@@ -412,7 +412,7 @@ subroutine ca_radfill(rad,rad_l1,rad_l2, &
      ! energy
         rad(rad_l1:rad_h1,j) = rad(rad_l1:rad_h1,j+1)
      enddo
-  enddo
+  endif
 
 end subroutine ca_radfill
 
