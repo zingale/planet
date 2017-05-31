@@ -17,8 +17,9 @@ contains
     use network, only: nspec
     use model_parser_module
     use bl_error_module
+    use eos_type_module
 
-    include 'bc_types.fi'
+    include 'AMReX_bc_types.fi'
 
     integer adv_l1,adv_l2,adv_h1,adv_h2
     integer bc(2,2,*)
@@ -205,7 +206,7 @@ contains
     use model_parser_module
 
     implicit none
-    include 'bc_types.fi'
+    include 'AMReX_bc_types.fi'
     integer adv_l1,adv_l2,adv_h1,adv_h2
     integer bc(2,2,*)
     integer domlo(2), domhi(2)
@@ -277,7 +278,7 @@ contains
 
     use probdata_module
     implicit none
-    include 'bc_types.fi'
+    include 'AMReX_bc_types.fi'
 
     integer :: grav_l1,grav_l2,grav_h1,grav_h2
     integer :: bc(2,2,*)
@@ -309,7 +310,7 @@ contains
     use meth_params_module, only: const_grav
 
     implicit none
-    include 'bc_types.fi'
+    include 'AMReX_bc_types.fi'
 
     integer :: grav_l1,grav_l2,grav_h1,grav_h2
     integer :: bc(2,2,*)
@@ -341,7 +342,7 @@ contains
     use meth_params_module, only: const_grav
 
     implicit none
-    include 'bc_types.fi'
+    include 'AMReX_bc_types.fi'
 
     integer :: grav_l1,grav_l2,grav_h1,grav_h2
     integer :: bc(2,2,*)
@@ -371,7 +372,7 @@ contains
 
     use probdata_module
     implicit none
-    include 'bc_types.fi'
+    include 'AMReX_bc_types.fi'
 
     integer :: react_l1,react_l2,react_h1,react_h2
     integer :: bc(2,2,*)
@@ -389,7 +390,7 @@ contains
 
     use probdata_module
     implicit none
-    include 'bc_types.fi'
+    include 'AMReX_bc_types.fi'
 
     integer :: rad_l1,rad_l2,rad_h1,rad_h2
     integer :: bc(2,2,*)
@@ -422,7 +423,7 @@ contains
 
     implicit none
 
-    include 'bc_types.fi'
+    include 'AMReX_bc_types.fi'
 
     integer          :: phi_l1,phi_l2,phi_h1,phi_h2
     integer          :: bc(2,2,*)
